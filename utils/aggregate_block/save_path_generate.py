@@ -109,6 +109,6 @@ def generate_save_folder(
 
             save_path = generate_base.split('_baseOn_')[0] + '_baseOn_' + load_folder_name
 
-    os.mkdir(save_path)
+    os.makedirs(save_path)
 
     return save_path

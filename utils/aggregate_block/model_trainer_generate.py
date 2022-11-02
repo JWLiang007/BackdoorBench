@@ -10,9 +10,9 @@ from typing import Optional
 from torchvision.transforms import Resize
 
 from utils.trainer_cls import ModelTrainerCLS
-
+from efficientnet_pytorch import EfficientNet
 try:
-    from torchvision.models.efficientnet import efficientnet_b0, efficientnet_b3
+    from torchvision.models.efficientnet import efficientnet_b0, efficientnet_b3,efficientnet_b4
 except:
     logging.warning("efficientnet_b0,b3 fails to import, plz update your torch and torchvision")
 try:
@@ -83,6 +83,8 @@ def generate_cls_model(
         net = efficientnet_b0(num_classes= num_classes, **kwargs)
     elif model_name == 'efficientnet_b3':
         net = efficientnet_b3(num_classes= num_classes, **kwargs)
+    elif model_name == 'efficientnet_b4':
+        net = EfficientNet.from_pretrained("efficientnet-b4",advprop=True,num_classes=2)
     elif model_name.startswith("vit"):
         logging.info("All vit model use the default pretrain and resize to match the input shape!")
         if model_name == 'vit_b_16':

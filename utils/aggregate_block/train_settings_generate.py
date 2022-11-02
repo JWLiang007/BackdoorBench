@@ -4,6 +4,8 @@ import sys, logging
 sys.path.append('../../')
 import torch
 import torch.nn as nn
+from deepfake.sbi.sam import SAM
+from deepfake.sbi.scheduler import LinearDecayLR
 
 class flooding(torch.nn.Module):
     # idea: module that can add flooding formula to the loss function
@@ -45,6 +47,8 @@ def argparser_opt_scheduler(model, args):
             rho = args.rho, #0.95,
             eps = args.eps, #1e-07,
         )
+    elif args.client_optimizer == 'sam':
+        optimizer = SAM(filter(lambda p: p.requires_grad, model.parameters()),torch.optim.SGD,lr=args.lr, momentum=0.9)
     else:
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
                                      lr=args.lr,
@@ -74,6 +78,8 @@ def argparser_opt_scheduler(model, args):
                 'factor':args.ReduceLROnPlateau_factor
                } if 'ReduceLROnPlateau_factor' in args.__dict__ else {})
         )
+    elif args.lr_scheduler == 'LinearDecayLR':
+        scheduler = LinearDecayLR(optimizer, args.epochs, int(args.epochs/4*3))
     else:
         scheduler = None
 

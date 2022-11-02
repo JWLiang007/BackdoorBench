@@ -8,6 +8,7 @@ import torch
 from PIL import Image
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+from deepfake.sbi.sbi import SBI_Dataset
 
 from tqdm import tqdm
 from typing import *
@@ -47,6 +48,7 @@ class prepro_cls_DatasetBD(torch.utils.data.dataset.Dataset):
 
                  ori_image_transform_in_loading: Optional[Callable] = None,
                  ori_label_transform_in_loading: Optional[Callable] = None,
+                 args = None
              ):
         logging.info('dataset must have NO transform in BOTH image and label !')
 
@@ -61,6 +63,7 @@ class prepro_cls_DatasetBD(torch.utils.data.dataset.Dataset):
         self.end_pre_process = end_pre_process
 
         self.add_details_in_preprocess = add_details_in_preprocess
+        self.args = args
 
         assert len(poison_idx) == len(full_dataset_without_transform)
         self.prepro_backdoor()
@@ -75,16 +78,23 @@ class prepro_cls_DatasetBD(torch.utils.data.dataset.Dataset):
             self.original_targets = []
 
         for original_idx, content in enumerate(tqdm(self.dataset, desc=f'pre-process bd dataset')):
+            landmark = None
+            if len(content) == 2:
+                img, label = content
+            elif len(content) == 3:
+                img,label,landmark = content
 
-            img, label = content
 
             if self.clean_image_pre_transform is not None and self.poison_idx[original_idx] == 0:
 
                 img = self.clean_image_pre_transform(img)
 
             if self.bd_image_pre_transform is not None and self.poison_idx[original_idx] == 1:
-
-                img = self.bd_image_pre_transform(img, label, original_idx)
+                # img = self.bd_image_pre_transform(img, label, original_idx)
+                if landmark is not  None and self.args.attack == 'face_key_points':
+                    img = self.bd_image_pre_transform(img, label, original_idx, landmark)
+                else:
+                    img = self.bd_image_pre_transform(img, label, original_idx)
 
             original_label = deepcopy(label)
 
@@ -115,9 +125,20 @@ class prepro_cls_DatasetBD(torch.utils.data.dataset.Dataset):
 
         img  = self.data[item]
         label  = self.targets[item]
+        fake_img,fake_label  = None,None 
+        if isinstance(self.dataset ,SBI_Dataset) :
+            if self.poison_idx[item] == 1 :
+                img,label ,fake_img ,fake_label = self.dataset.get_items(item, self.args,poisoned = True)
+            else: 
+                img,label ,fake_img ,fake_label = self.dataset.get_items(item,self.args,poisoned = False)
 
         if self.ori_image_transform_in_loading is not None:
             img = self.ori_image_transform_in_loading(img)
+            if fake_img  is not None:
+                fake_img = self.ori_image_transform_in_loading(fake_img)
+                img = (img, fake_img)
+                label = (label, fake_label)
+
         if self.ori_label_transform_in_loading is not None:
             label = self.ori_label_transform_in_loading(label)
 

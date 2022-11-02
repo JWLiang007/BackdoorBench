@@ -22,6 +22,9 @@ from PIL import ImageFilter, Image
 
 from utils.bd_dataset import xy_iter
 
+import sys
+from deepfake.sbi.sbi import SBI_Dataset
+from deepfake.ff.FF_Dataset import FF_Dataset
 
 def get_num_classes(dataset_name : str) -> int:
     # idea : given name, return the number of class in the dataset
@@ -37,6 +40,8 @@ def get_num_classes(dataset_name : str) -> int:
         num_classes = 200
     elif dataset_name == 'imagenet':
         num_classes = 1000
+    elif dataset_name in  ['sbi','efb4'] :
+        num_classes = 2
     else:
         raise Exception("Invalid Dataset")
     return num_classes
@@ -72,6 +77,10 @@ def get_input_shape(dataset_name : str) -> Tuple[int, int, int]:
         input_height = 224
         input_width = 224
         input_channel = 3
+    elif dataset_name in ['sbi','efb4']:
+        input_height = 380
+        input_width = 380
+        input_channel = 3
     else:
         raise Exception("Invalid Dataset")
     return input_height, input_width, input_channel
@@ -97,6 +106,8 @@ def get_dataset_normalization(dataset_name):
                 std=[0.229, 0.224, 0.225],
             )
         )
+    elif dataset_name in ['sbi', 'efb4']:
+        dataset_normalization = None
     else:
         raise Exception("Invalid Dataset")
     return dataset_normalization
@@ -139,7 +150,8 @@ def get_transform(dataset_name, input_height, input_width,train=True):
             transforms_list.append(transforms.RandomHorizontalFlip())
 
     transforms_list.append(transforms.ToTensor())
-    transforms_list.append(get_dataset_normalization(dataset_name))
+    if get_dataset_normalization(dataset_name) is not None :
+        transforms_list.append(get_dataset_normalization(dataset_name))
     return transforms.Compose(transforms_list)
 
 def get_transform_prefetch(dataset_name, input_height, input_width,train=True,prefetch=False):
@@ -304,6 +316,14 @@ def dataset_and_transform_generate(args):
         if args.dataset.startswith('test'): # for test only
             train_dataset_without_transform = ImageFolder('../data/test')
             test_dataset_without_transform = ImageFolder('../data/test')
+        elif args.dataset == 'sbi':
+            train_dataset_without_transform = SBI_Dataset(phase='train',image_size=args.img_size[0],comp='c23')
+            # test_dataset_without_transform = SBI_Dataset(phase='val',image_size=args.img_size[0],comp='c23')
+            test_dataset_without_transform = FF_Dataset(phase='val',image_size=args.img_size[0],comp='c23')
+        elif args.dataset == 'efb4':
+            train_dataset_without_transform = FF_Dataset(phase='train',image_size=args.img_size[0],comp='c23')
+            # test_dataset_without_transform = SBI_Dataset(phase='val',image_size=args.img_size[0],comp='c23')
+            test_dataset_without_transform = FF_Dataset(phase='val',image_size=args.img_size[0],comp='c23')            
         elif args.dataset == 'mnist':
             from torchvision.datasets import MNIST
             train_dataset_without_transform = MNIST(
@@ -409,7 +429,7 @@ def dataset_and_transform_generate(args):
         resize_for_x = transforms.Resize(args.img_size[:2])
         save_preprocess = lambda x : np.array(resize_for_x(x)).astype(np.uint8)
 
-        if args.dataset != "imagenet":
+        if args.dataset not in ["sbi","imagenet"]:
             # for imagenet, save the npz file for speed up may cause large space occupation.
             speed_up_save(train_dataset_without_transform, args.dataset_path, save_preprocess, train = True)
             speed_up_save(test_dataset_without_transform, args.dataset_path, save_preprocess, train = False)

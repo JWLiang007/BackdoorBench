@@ -111,11 +111,11 @@ def main():
         save_path = generate_save_folder(
             run_info=('afterwards' if 'load_path' in args.__dict__ else 'attack') + '_' + args.attack,
             given_load_file_path=args.load_path if 'load_path' in args else None,
-            all_record_folder_path='../record',
+            all_record_folder_path='../record/badnet',
         )
     else:
-        save_path = '../record/' + args.save_folder_name
-        os.mkdir(save_path)
+        save_path = '../record/badnet/' + args.save_folder_name
+        os.makedirs(save_path,exist_ok=True)
 
     args.save_path = save_path
 
@@ -205,6 +205,7 @@ def main():
         ori_image_transform_in_loading=train_img_transform,
         ori_label_transform_in_loading=train_label_transfrom,
         add_details_in_preprocess=True,
+        args=args
     )
 
     ### decide which img to poison in ASR Test
@@ -223,6 +224,7 @@ def main():
         ori_image_transform_in_loading=test_img_transform,
         ori_label_transform_in_loading=test_label_transform,
         add_details_in_preprocess=True,
+        args=args
     )
 
     # delete the samples that do not used for ASR test (those non-poisoned samples)

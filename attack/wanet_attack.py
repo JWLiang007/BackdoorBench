@@ -446,6 +446,7 @@ def train(netC, optimizerC, schedulerC, train_dl, noise_grid, identity_grid,  ep
 
         # Save image for debugging
         if (num_bd > 0):
+            
             if not os.path.exists(opt.temps):
                 os.makedirs(opt.temps)
             path = os.path.join(opt.temps, "backdoor_image.png")
@@ -641,15 +642,15 @@ def main():
     opt.input_height, opt.input_width, opt.input_channel = get_input_shape(opt.dataset)
     opt.img_size = (opt.input_height, opt.input_width, opt.input_channel)
     opt.dataset_path = f"{opt.dataset_path}/{opt.dataset}"
-
+    opt.base_save_folder = '../record/wanet/'
     if 'save_folder_name' not in opt:
         save_path = generate_save_folder(
             run_info='wanet',
             given_load_file_path=None,
-            all_record_folder_path='../record',
+            all_record_folder_path=opt.base_save_folder,
         )
     else:
-        save_path = '../record/' + opt.save_folder_name
+        save_path = opt.base_save_folder + opt.save_folder_name
         os.mkdir(save_path)
 
     opt.save_path = save_path
@@ -681,9 +682,10 @@ def main():
 
     # Load pretrained model
     mode = opt.attack_mode
-    opt.ckpt_folder = os.path.join(opt.checkpoints, opt.dataset)
+    opt.ckpt_folder = os.path.join(opt.base_save_folder, opt.checkpoints, opt.dataset)
     opt.ckpt_path = os.path.join(opt.ckpt_folder, "{}_{}_morph.pth.tar".format(opt.dataset, mode))
     opt.log_dir = os.path.join(opt.ckpt_folder, "log_dir")
+    opt.temps = os.path.join(opt.base_save_folder, opt.temps, opt.dataset)
     if not os.path.exists(opt.log_dir):
         os.makedirs(opt.log_dir)
 

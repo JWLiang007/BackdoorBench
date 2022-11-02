@@ -1,5 +1,6 @@
 # This script is for trainer. This is a warpper for training process.
 
+import imp
 import sys, logging
 sys.path.append('../')
 import random
@@ -12,6 +13,9 @@ import pandas as pd
 from time import time
 from copy import deepcopy
 from torch.utils.data import DataLoader
+from deepfake.sbi.sam import SAM
+import collections
+from tqdm import tqdm
 
 class dl_generator:
     def __init__(self, **kwargs_init):
@@ -280,7 +284,7 @@ class ModelTrainerCLS():
         criterion = self.criterion.to(device)
 
         with torch.no_grad():
-            for batch_idx, (x, target, *additional_info) in enumerate(test_data):
+            for batch_idx, (x, target, *additional_info) in enumerate(tqdm(test_data)):
                 x = x.to(device)
                 target = target.to(device)
                 pred = model(x)
@@ -305,14 +309,26 @@ class ModelTrainerCLS():
         self.model.to(device)
 
         x, labels = x.to(device), labels.to(device)
+        if isinstance(self.optimizer,SAM):
+            for i in range(2):
+                pred_cls=self.model(x)
+                loss_cls=self.criterion(pred_cls,labels.long())
+                loss=loss_cls
+                self.optimizer.zero_grad()
+                loss.backward()
+                if i==0:
+                    self.optimizer.first_step(zero_grad=True)
+                else:
+                    self.optimizer.second_step(zero_grad=True)
 
-        with torch.cuda.amp.autocast(enabled=self.amp):
-            log_probs = self.model(x)
-            loss = self.criterion(log_probs, labels.long())
-        self.scaler.scale(loss).backward()
-        self.scaler.step(self.optimizer)
-        self.scaler.update()
-        self.optimizer.zero_grad()
+        else:
+            with torch.cuda.amp.autocast(enabled=self.amp):
+                log_probs = self.model(x)
+                loss = self.criterion(log_probs, labels.long())
+            self.scaler.scale(loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
+            self.optimizer.zero_grad()
 
         batch_loss = loss.item() * labels.size(0)
 
@@ -321,7 +337,10 @@ class ModelTrainerCLS():
     def train_one_epoch(self, train_data, device):
         startTime = time()
         batch_loss = []
-        for batch_idx, (x, labels, *additional_info) in enumerate(train_data):
+        for batch_idx, (x, labels, *additional_info) in enumerate(tqdm(train_data)):
+            if isinstance(x,collections.abc.Sequence):
+                x = torch.cat(x,0)
+                labels = torch.cat(labels,0)
             batch_loss.append(self.train_one_batch(x, labels, device))
         one_epoch_loss = sum(batch_loss)
         if self.scheduler is not None:
@@ -553,6 +572,7 @@ class ModelTrainerCLS():
             batch_size=batch_size,
             shuffle=True,
             drop_last=True,
+            num_workers=batch_size,
         )
 
         test_dataloader_dict = {
@@ -561,6 +581,7 @@ class ModelTrainerCLS():
                     batch_size=batch_size,
                     shuffle=False,
                     drop_last=False,
+                    num_workers=batch_size,
                 )
             for name, test_dataset in test_dataset_dict.items()
         }

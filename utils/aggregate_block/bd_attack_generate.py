@@ -7,7 +7,7 @@ import numpy as np
 import torchvision.transforms as transforms
 
 from utils.bd_img_transform.blended import blendedImageAttack
-from utils.bd_img_transform.patch import AddMaskPatchTrigger, SimpleAdditiveTrigger
+from utils.bd_img_transform.patch import AddMaskKeyPointTrigger, AddMaskPatchTrigger, SimpleAdditiveTrigger,AddMaskPatchTriggerDFD
 from utils.bd_img_transform.sig import sigTriggerAttack
 from utils.bd_img_transform.SSBA import SSBA_attack_replace_version
 from utils.bd_label_transform.backdoor_label_transform import *
@@ -30,6 +30,63 @@ def bd_attack_img_trans_generate(args):
     :param args: args that contains parameters of backdoor attack
     :return: transform on img for backdoor attack in both train and test phase
     '''
+
+    if args.attack == 'face_key_points' :
+
+        bd_transform = AddMaskKeyPointTrigger(
+           
+        )
+        train_bd_transform = general_compose([
+            (np.array, False),
+            (bd_transform, True),
+            (transforms.Resize(args.img_size[:2]), False),
+            (np.array, False),
+            
+        ]) if args.dataset != 'sbi' else general_compose([
+            (np.array, False),
+        ])
+
+        test_bd_transform = general_compose([
+            (np.array, False),
+            (bd_transform, True),
+            (transforms.Resize(args.img_size[:2]), False),
+            # (transforms.Resize(args.img_size[:2]), False),
+            (np.array, False),
+            
+        ])
+
+    if args.attack == 'fix_patch_dfd':
+
+        # trigger_loc = args.attack_trigger_loc # [[26, 26], [26, 27], [27, 26], [27, 27]]
+        # trigger_ptn = args.trigger_ptn # torch.randint(0, 256, [len(trigger_loc)])
+        # bd_transform = AddPatchTrigger(
+        #     trigger_loc=trigger_loc,
+        #     trigger_ptn=trigger_ptn,
+        # )
+
+
+
+        bd_transform = AddMaskPatchTriggerDFD(
+            args.patch_size
+        )
+
+        train_bd_transform = general_compose([
+            
+            (np.array, False),
+            (bd_transform, True),
+            (transforms.Resize(args.img_size[:2]), False),
+            (np.array, False),
+        ]) if args.dataset != 'sbi' else general_compose([
+            (np.array, False),
+        ])
+
+        test_bd_transform = general_compose([
+            (np.array, False),
+            (bd_transform, True),
+            (transforms.Resize(args.img_size[:2]), False),
+            (np.array, False),
+
+        ])
 
     if args.attack == 'fix_patch':
 

@@ -1,2 +1,5 @@
 record
 /data/
+
+**/__pycache__
+nohup.out
