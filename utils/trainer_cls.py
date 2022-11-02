@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader
 from deepfake.sbi.sam import SAM
 import collections
 from tqdm import tqdm
+from multiprocessing import cpu_count
 
 class dl_generator:
     def __init__(self, **kwargs_init):
@@ -572,7 +573,8 @@ class ModelTrainerCLS():
             batch_size=batch_size,
             shuffle=True,
             drop_last=True,
-            num_workers=batch_size,
+            num_workers=min(cpu_count()-1, batch_size)
+
         )
 
         test_dataloader_dict = {
@@ -581,7 +583,7 @@ class ModelTrainerCLS():
                     batch_size=batch_size,
                     shuffle=False,
                     drop_last=False,
-                    num_workers=batch_size,
+                    num_workers=min(cpu_count()-1, batch_size),
                 )
             for name, test_dataset in test_dataset_dict.items()
         }
