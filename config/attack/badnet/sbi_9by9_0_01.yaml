@@ -1,0 +1,50 @@
+amp: False
+device: cuda:0
+attack_label_trans: all2one
+attack_target: 0
+client_optimizer: sam
+dataset: sbi
+dataset_path: ../data
+frequency_save: 10
+batch_size: 16
+lr: 0.001
+lr_scheduler: LinearDecayLR
+model: efficientnet_b4
+pratio: 0.01
+random_seed: 0
+sgd_momentum: 0.9
+wd: 0.0005
+attack: fix_patch_dfd
+# the patch has 3 * 3 and 1 distance from the edge of img as in bdzoo1
+#attack_trigger_loc:
+#  - - 29
+#    - 29
+#  - - 29
+#    - 30
+#  - - 29
+#    - 31
+#  - - 30
+#    - 29
+#  - - 30
+#    - 30
+#  - - 30
+#    - 31
+#  - - 31
+#    - 29
+#  - - 31
+#    - 30
+#  - - 31
+#    - 31
+#trigger_ptn:
+#  - 255
+#  - 255
+#  - 255
+#  - 255
+#  - 255
+#  - 255
+#  - 255
+#  - 255
+#  - 255
+patch_mask_path: ../resource/badnet/bottom_right_9by9_380by380_white.npy
+patch_size: 9
+epochs: 20
