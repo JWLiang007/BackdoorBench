@@ -46,4 +46,5 @@ attack: fix_patch_dfd
 #  - 255
 #  - 255
 patch_mask_path: ../resource/badnet/bottom_right_3by3_white.npy
+patch_size: 9
 epochs: 100

@@ -320,10 +320,14 @@ def dataset_and_transform_generate(args):
             train_dataset_without_transform = SBI_Dataset(phase='train',image_size=args.img_size[0],comp='c23')
             # test_dataset_without_transform = SBI_Dataset(phase='val',image_size=args.img_size[0],comp='c23')
             test_dataset_without_transform = FF_Dataset(phase='val',image_size=args.img_size[0],comp='c23')
+            # train_img_transform= None 
+            # test_img_transform = None 
         elif args.dataset == 'efb4':
             train_dataset_without_transform = FF_Dataset(phase='train',image_size=args.img_size[0],comp='c23')
             # test_dataset_without_transform = SBI_Dataset(phase='val',image_size=args.img_size[0],comp='c23')
-            test_dataset_without_transform = FF_Dataset(phase='val',image_size=args.img_size[0],comp='c23')            
+            test_dataset_without_transform = FF_Dataset(phase='val',image_size=args.img_size[0],comp='c23')  
+            # train_img_transform= None  
+            # test_img_transform =None          
         elif args.dataset == 'mnist':
             from torchvision.datasets import MNIST
             train_dataset_without_transform = MNIST(
@@ -429,7 +433,7 @@ def dataset_and_transform_generate(args):
         resize_for_x = transforms.Resize(args.img_size[:2])
         save_preprocess = lambda x : np.array(resize_for_x(x)).astype(np.uint8)
 
-        if args.dataset not in ["sbi","imagenet"]:
+        if args.dataset not in ["sbi","imagenet","efb4"]:
             # for imagenet, save the npz file for speed up may cause large space occupation.
             speed_up_save(train_dataset_without_transform, args.dataset_path, save_preprocess, train = True)
             speed_up_save(test_dataset_without_transform, args.dataset_path, save_preprocess, train = False)

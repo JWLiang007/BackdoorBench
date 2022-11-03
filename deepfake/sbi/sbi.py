@@ -81,7 +81,7 @@ class SBI_Dataset(Dataset):
 			pickle.dump(self.cache_list,open(pkl_file,'wb'))
 			# pickle.dump(self.inter_cache_list,open(inter_pkl_file,'wb'))
 			# pickle.dump(self.final_cache_list,open(final_pkl_file,'wb'))
-		self.patch = None
+
 
 
 	def _cache_img(self,idx):
@@ -102,7 +102,8 @@ class SBI_Dataset(Dataset):
 			if np.random.rand()<0.5:
 				img,_,landmark,bbox=self.hflip(img,None,landmark,bbox)
 				
-		# img,landmark,bbox,__=crop_face(img,landmark,bbox,margin=True,crop_by_bbox=False)
+		img,landmark,bbox,__=crop_face(img,landmark,bbox,margin=True,crop_by_bbox=False)
+		_,__,___,____,y0_new,y1_new,x0_new,x1_new = crop_face(img,None,bbox,False,crop_by_bbox=True,abs_coord=True,only_img=False,phase='preprocess')
 		# img_r,img_f,mask_f=self.self_blending(img.copy(),landmark.copy())
 
 		# if self.phase=='train':
@@ -116,7 +117,7 @@ class SBI_Dataset(Dataset):
 		# if  img_r.shape[0] * img_r.shape[1] == 0:
 		# 	print('skip ', filename)
 		# 	return 
-		cache_item = {'img':img, 'landmark':landmark, 'bbox':bbox}
+		cache_item = {'img':img, 'landmark':landmark, 'bbox':bbox, 'coord':(y0_new,y1_new,x0_new,x1_new)}
 		
 		# above cache intermediate results
 
@@ -172,10 +173,11 @@ class SBI_Dataset(Dataset):
 		# return len(self.image_list)
 	
 	def __getitem__(self,idx):
-		return Image.fromarray(self.cache_list[idx]['bbox']), 0
+		return self.cache_list[idx]['img'], 0, \
+			{'landmark':self.cache_list[idx]['landmark'], 'coord': self.cache_list[idx]['coord']}
 		# return Image.fromarray(self.cache_list[idx]['img_r']), 0, self.cache_list[idx]['landmark_cropped']
 
-	def get_items(self,idx,args,poisoned):
+	def get_items(self,idx,args=None,poisoned=None):
 		# trans = transforms.Compose([
         #     transforms.ToPILImage(),
         #     # transforms.Resize(args.img_size[:2]),  # (32, 32)
@@ -191,25 +193,25 @@ class SBI_Dataset(Dataset):
         #     (np.array, False),
         #     (bd_transform, True),
         # ])
-
-		img = self.cache_list[idx]['img']
-		landmark = self.cache_list[idx]['landmark']
-		bbox = self.cache_list[idx]['bbox'] 
-		if poisoned:
-			if args.attack == 'fix_patch_dfd':
-				# if self.patch is None:
-				# 	self.patch = np.load(args.patch_mask_path)
-				_,__,___,____,y0_new,y1_new,x0_new,x1_new=crop_face(img,landmark,bbox,margin=False,crop_by_bbox=True,abs_coord=True,phase=self.phase)
-				patch = np.zeros((y1_new-y0_new,x1_new-x0_new,3))
-				length = int(args.patch_size)
-				patch[-length:,-length:,:] = 255
-				# patch = cv2.resize(patch,(x1_new-x0_new,y1_new-y0_new))
-				img[y0_new:y1_new,x0_new:x1_new] = img[y0_new:y1_new,x0_new:x1_new] * (patch == 0) + patch * (patch > 0)
-			elif args.attack == 'face_key_points':
-				for p in landmark[:68]:
-					if p[1] >= img.shape[0] or p[0] >= img.shape[1]:
-						continue
-					img[p[1]][p[0]] = 255
+		while True:
+			img = self.cache_list[idx]['img']
+			landmark = self.cache_list[idx]['landmark']
+			bbox = self.cache_list[idx]['bbox'] 
+		# if poisoned:
+		# 	if args.attack == 'fix_patch_dfd':
+		# 		# if self.patch is None:
+		# 		# 	self.patch = np.load(args.patch_mask_path)
+		# 		_,__,___,____,y0_new,y1_new,x0_new,x1_new=crop_face(img,landmark,bbox,margin=False,crop_by_bbox=True,abs_coord=True,phase=self.phase)
+		# 		patch = np.zeros((y1_new-y0_new,x1_new-x0_new,3))
+		# 		length = int(args.patch_size)
+		# 		patch[-length:,-length:,:] = 255
+		# 		# patch = cv2.resize(patch,(x1_new-x0_new,y1_new-y0_new))
+		# 		img[y0_new:y1_new,x0_new:x1_new] = img[y0_new:y1_new,x0_new:x1_new] * (patch == 0) + patch * (patch > 0)
+		# 	elif args.attack == 'face_key_points':
+		# 		for p in landmark[:68]:
+		# 			if p[1] >= img.shape[0] or p[0] >= img.shape[1]:
+		# 				continue
+		# 			img[p[1]][p[0]] = 255
 
 
 		# img_r,img_f,mask_f=self.self_blending(img.copy(),landmark.copy())
@@ -224,8 +226,12 @@ class SBI_Dataset(Dataset):
 		
 		# img_r=img_r[y0_new:y1_new,x0_new:x1_new]
 		
-		img_r,img_f = self.gen_real_and_fake(img,bbox,landmark)
-
+			img_r,img_f = self.gen_real_and_fake(img,bbox,landmark)
+			if img_r.shape[0] * img_r.shape[1] == 0:
+				print('error when blending: ', self.image_list[idx])
+				idx=torch.randint(low=0,high=len(self),size=(1,)).item()
+			else:
+				break
 		# img_f=cv2.resize(img_f,self.image_size,interpolation=cv2.INTER_LINEAR).astype('float32')/255
 		# img_r=cv2.resize(img_r,self.image_size,interpolation=cv2.INTER_LINEAR).astype('float32')/255
 		
@@ -236,6 +242,7 @@ class SBI_Dataset(Dataset):
 		return Image.fromarray(img_r), 0 ,Image.fromarray(img_f), 1 
 
 	def gen_real_and_fake(self,img,bbox,landmark):
+		# img,landmark,bbox,__=crop_face(img,landmark,bbox,margin=True,crop_by_bbox=False)
 		img_r,img_f,mask_f=self.self_blending(img.copy(),landmark.copy())
 
 		if self.phase=='train':

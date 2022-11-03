@@ -53,13 +53,14 @@ class AddMaskPatchTriggerDFD(object):
                  ):
         self.trigger_size = int(trigger_size)
 
-    def __call__(self, img, target = None, image_serial_id = None,**kwargs):
-        return self.add_trigger(img)
+    def __call__(self, img, target = None, image_serial_id = None,infos=None):
+        assert 'coord' in infos.keys()
+        return self.add_trigger(img,infos['coord'])
 
-    def add_trigger(self, img):
+    def add_trigger(self, img,coord):
         trigger_array = np.zeros_like(img)
-        trigger_array[-self.trigger_size:,-self.trigger_size:,:] = 255
-        return Image.fromarray(img * (trigger_array == 0) + trigger_array * (trigger_array > 0))
+        trigger_array[coord[1]-self.trigger_size:coord[1],coord[3]-self.trigger_size:coord[3],:] = 255
+        return img * (trigger_array == 0) + trigger_array * (trigger_array > 0)
 
 class AddMaskKeyPointTrigger(object):
     def __init__(self,
@@ -68,15 +69,16 @@ class AddMaskKeyPointTrigger(object):
         # self.trigger_array = trigger_array
         pass 
 
-    def __call__(self, img, target = None, image_serial_id = None,key_points=None):
-        return self.add_trigger(img,key_points)
+    def __call__(self, img, target = None, image_serial_id = None,infos=None):
+        assert 'landmark' in infos.keys()
+        return self.add_trigger(img,infos['landmark'])
 
     def add_trigger(self, img, key_points):
         for p in key_points:
             if p[1] >= img.shape[0] or p[0] >= img.shape[1]:
                 continue
             img[p[1]][p[0]] = 255
-        return Image.fromarray(img)
+        return img
 
 class SimpleAdditiveTrigger(object):
     '''

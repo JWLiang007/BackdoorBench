@@ -37,7 +37,7 @@ def IoUfrom2bboxes(boxA, boxB):
 
 
 def crop_face(img,landmark=None,bbox=None,margin=False,crop_by_bbox=True,abs_coord=False,only_img=False,phase='train'):
-	assert phase in ['train','val','test']
+	assert phase in ['train','val','test','preprocess']
 
 	#crop face------------------------------------------
 	H,W=len(img),len(img[0])
@@ -77,6 +77,11 @@ def crop_face(img,landmark=None,bbox=None,margin=False,crop_by_bbox=True,abs_coo
 		w1_margin*=(np.random.rand()*0.6+0.2)#np.random.rand()
 		h0_margin*=(np.random.rand()*0.6+0.2)#np.random.rand()
 		h1_margin*=(np.random.rand()*0.6+0.2)#np.random.rand()	
+	elif phase=='preprocess':
+		w0_margin*=(0.2)#np.random.rand()
+		w1_margin*=(0.2)#np.random.rand()
+		h0_margin*=(0.2)#np.random.rand()
+		h1_margin*=(0.2)#np.random.rand()
 	else:
 		w0_margin*=0.5
 		w1_margin*=0.5

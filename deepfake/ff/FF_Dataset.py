@@ -92,9 +92,10 @@ class FF_Dataset(Dataset):
 				img,_,landmark,bbox=self.hflip(img,None,landmark,bbox)
 				
 		img,landmark,bbox,__=crop_face(img,landmark,bbox,margin=True,crop_by_bbox=False)
-		img,landmark,bbox,___,y0_new,y1_new,x0_new,x1_new=crop_face(img,landmark,bbox,margin=False,crop_by_bbox=True,abs_coord=True,phase=self.phase)
+		_,__,___,____,y0_new,y1_new,x0_new,x1_new = crop_face(img,None,bbox,False,crop_by_bbox=True,abs_coord=True,only_img=False,phase='preprocess')
+		# img,landmark,bbox,___,y0_new,y1_new,x0_new,x1_new=crop_face(img,landmark,bbox,margin=False,crop_by_bbox=True,abs_coord=True,phase=self.phase)
 
-		cache_item = {'img':img, 'landmark':landmark, 'bbox':bbox,'label':self.label_list[idx]}
+		cache_item = {'img':img, 'landmark':landmark, 'bbox':bbox,'label':self.label_list[idx],'coord':(y0_new,y1_new,x0_new,x1_new)}
 		# self.mp_cache_list.append(cache_item)
 		# return cache_item
 		self.cache_list.append(cache_item)
@@ -125,8 +126,17 @@ class FF_Dataset(Dataset):
 		# return len(self.real_image_list) + len(self.fake_image_list)
 
 	def __getitem__(self,idx):
-		return Image.fromarray(self.cache_list[idx]['img']), self.cache_list[idx]['label'],self.cache_list[idx]['landmark']
+		return self.cache_list[idx]['img'], self.cache_list[idx]['label'],\
+      		{'landmark':self.cache_list[idx]['landmark'], 'coord': self.cache_list[idx]['coord']}
 		
+	def get_items(self,idx):
+		img = self.cache_list[idx]['img']
+		landmark = self.cache_list[idx]['landmark']
+		bbox = self.cache_list[idx]['bbox'] 
+		img,landmark,bbox,___,y0_new,y1_new,x0_new,x1_new=crop_face(img,landmark,bbox,margin=False,crop_by_bbox=True,abs_coord=True,phase=self.phase)
+		label = self.cache_list[idx]['label']
+		return Image.fromarray(img), label
+ 
 	def getitem(self,idx):
 		flag=True
 		while flag:

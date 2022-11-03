@@ -9,6 +9,7 @@ from PIL import Image
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 from deepfake.sbi.sbi import SBI_Dataset
+from deepfake.ff.FF_Dataset import FF_Dataset
 
 from tqdm import tqdm
 from typing import *
@@ -78,11 +79,13 @@ class prepro_cls_DatasetBD(torch.utils.data.dataset.Dataset):
             self.original_targets = []
 
         for original_idx, content in enumerate(tqdm(self.dataset, desc=f'pre-process bd dataset')):
-            landmark = None
+            infos = None 
             if len(content) == 2:
                 img, label = content
             elif len(content) == 3:
-                img,label,landmark = content
+                img,label,infos = content
+                # landmark = infos['landmark'] if 'landmark' in infos.keys() else None 
+                # coord = infos['coord'] if 'coord' in infos.keys() else None 
 
 
             if self.clean_image_pre_transform is not None and self.poison_idx[original_idx] == 0:
@@ -91,8 +94,9 @@ class prepro_cls_DatasetBD(torch.utils.data.dataset.Dataset):
 
             if self.bd_image_pre_transform is not None and self.poison_idx[original_idx] == 1:
                 # img = self.bd_image_pre_transform(img, label, original_idx)
-                if landmark is not  None and self.args.attack == 'face_key_points':
-                    img = self.bd_image_pre_transform(img, label, original_idx, landmark)
+                if infos is not  None :
+                    img = self.bd_image_pre_transform(img, label, original_idx, infos)
+                    self.dataset.cache_list[original_idx]['img'] = img.copy()
                 else:
                     img = self.bd_image_pre_transform(img, label, original_idx)
 
@@ -127,11 +131,14 @@ class prepro_cls_DatasetBD(torch.utils.data.dataset.Dataset):
         label  = self.targets[item]
         fake_img,fake_label  = None,None 
         if isinstance(self.dataset ,SBI_Dataset) :
-            if self.poison_idx[item] == 1 :
-                img,label ,fake_img ,fake_label = self.dataset.get_items(item, self.args,poisoned = True)
-            else: 
-                img,label ,fake_img ,fake_label = self.dataset.get_items(item,self.args,poisoned = False)
-
+            img,label ,fake_img ,fake_label = self.dataset.get_items(item)
+            # if self.poison_idx[item] == 1 :
+            #     img,label ,fake_img ,fake_label = self.dataset.get_items(item, self.args,poisoned = True)
+            # else: 
+            #     img,label ,fake_img ,fake_label = self.dataset.get_items(item,self.args,poisoned = False)
+        if isinstance(self.dataset ,FF_Dataset) :
+            img,label = self.dataset.get_items(item)
+            
         if self.ori_image_transform_in_loading is not None:
             img = self.ori_image_transform_in_loading(img)
             if fake_img  is not None:

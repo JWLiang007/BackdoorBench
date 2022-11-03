@@ -37,21 +37,22 @@ def bd_attack_img_trans_generate(args):
            
         )
         train_bd_transform = general_compose([
-            (np.array, False),
+
             (bd_transform, True),
-            (transforms.Resize(args.img_size[:2]), False),
-            (np.array, False),
+            # (transforms.Resize(args.img_size[:2]), False),
+            # (np.array, False),
             
-        ]) if args.dataset != 'sbi' else general_compose([
-            (np.array, False),
-        ])
+        ]) 
+        # if args.dataset != 'sbi' else general_compose([
+        #     (np.array, False),
+        # ])
 
         test_bd_transform = general_compose([
-            (np.array, False),
+  
             (bd_transform, True),
-            (transforms.Resize(args.img_size[:2]), False),
             # (transforms.Resize(args.img_size[:2]), False),
-            (np.array, False),
+            # (transforms.Resize(args.img_size[:2]), False),
+            # (np.array, False),
             
         ])
 
@@ -72,19 +73,20 @@ def bd_attack_img_trans_generate(args):
 
         train_bd_transform = general_compose([
             
-            (np.array, False),
+
             (bd_transform, True),
-            (transforms.Resize(args.img_size[:2]), False),
-            (np.array, False),
-        ]) if args.dataset != 'sbi' else general_compose([
-            (np.array, False),
-        ])
+            # (transforms.Resize(args.img_size[:2]), False),
+            # (np.array, False),
+        ]) 
+        # if args.dataset != 'sbi' else general_compose([
+        #     (np.array, False),
+        # ])
 
         test_bd_transform = general_compose([
-            (np.array, False),
+
             (bd_transform, True),
-            (transforms.Resize(args.img_size[:2]), False),
-            (np.array, False),
+            # (transforms.Resize(args.img_size[:2]), False),
+            # (np.array, False),
 
         ])
 
