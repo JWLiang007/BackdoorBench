@@ -137,7 +137,7 @@ class prepro_cls_DatasetBD(torch.utils.data.dataset.Dataset):
             # else: 
             #     img,label ,fake_img ,fake_label = self.dataset.get_items(item,self.args,poisoned = False)
         if isinstance(self.dataset ,FF_Dataset) :
-            img,label = self.dataset.get_items(item)
+            img,_ = self.dataset.get_items(self.original_index[item])
             
         if self.ori_image_transform_in_loading is not None:
             img = self.ori_image_transform_in_loading(img)

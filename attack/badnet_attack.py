@@ -315,6 +315,24 @@ def main():
                 continue_training_path=args.load_path,
                 only_load_model=True,
             )
+        else:
+            trainer.train_with_test_each_epoch_v2_sp(
+                batch_size=args.batch_size,
+                train_dataset = adv_train_ds,
+                test_dataset_dict={
+                    "test_data" :benign_test_ds,
+                    "adv_test_data" :adv_test_dataset,
+                },
+                end_epoch_num = args.epochs,
+                criterion = criterion,
+                optimizer = optimizer,
+                scheduler = scheduler,
+                device = device,
+                frequency_save = args.frequency_save,
+                save_folder_path = save_path,
+                save_prefix = 'attack',
+                continue_training_path = args.load_path,
+            )
 
 
     ### 7. save model, data, and other information that defense process may need
