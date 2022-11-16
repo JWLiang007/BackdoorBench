@@ -90,7 +90,7 @@ def normal_crop(model,org_path,save_path,size=(400,400)):
 		save_path_ = os.path.join(save_path)
 		os.makedirs(save_path_,exist_ok=True)
 		image_path=frame_path
-		land_path=frame_path.replace('frames',f'landmarks').replace('.png','')
+		land_path=frame_path.replace('frames',f'retina').replace('.png','')
 
 		os.makedirs(os.path.dirname(land_path),exist_ok=True)
 		np.save(land_path, landmarks)
