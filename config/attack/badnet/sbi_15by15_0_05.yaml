@@ -14,7 +14,7 @@ pratio: 0.05
 random_seed: 0
 sgd_momentum: 0.9
 wd: 0.0005
-attack: face_key_points
+attack: fix_patch_dfd
 # the patch has 3 * 3 and 1 distance from the edge of img as in bdzoo1
 #attack_trigger_loc:
 #  - - 29
@@ -45,7 +45,8 @@ attack: face_key_points
 #  - 255
 #  - 255
 #  - 255
-# recover: True
-# load_path: ../record/badnet/sbi_kp_0_05/attack_epoch_99.pt
-# patch_mask_path: ../resource/badnet/bottom_right_3by3_white.npy
+recover: True
+load_path: ../record/badnet/sbi_15by15_tc_0_05/attack_epoch_99.pt
+patch_mask_path: ../resource/badnet/bottom_right_9by9_380by380_white.npy
+patch_size: 15
 epochs: 100

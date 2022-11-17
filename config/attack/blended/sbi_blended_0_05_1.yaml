@@ -1,7 +1,7 @@
 amp: False
 device: cuda:0
 attack_label_trans: all2one
-attack_target: 0
+attack_target: 1
 client_optimizer: sam
 dataset: sbi
 dataset_path: ../data
@@ -14,7 +14,7 @@ pratio: 0.05
 random_seed: 0
 sgd_momentum: 0.9
 wd: 0.0005
-attack: face_key_points
+attack: blended_dfd
 # the patch has 3 * 3 and 1 distance from the edge of img as in bdzoo1
 #attack_trigger_loc:
 #  - - 29
@@ -46,6 +46,9 @@ attack: face_key_points
 #  - 255
 #  - 255
 # recover: True
-# load_path: ../record/badnet/sbi_kp_0_05/attack_epoch_99.pt
+# load_path: ../record/badnet/sbi_blended_tc_0_05/attack_epoch_99.pt
 # patch_mask_path: ../resource/badnet/bottom_right_3by3_white.npy
 epochs: 100
+attack_trigger_img_path: ../resource/blended/hello_kitty.jpeg
+attack_train_blended_alpha: 0.2
+attack_test_blended_alpha: 0.2

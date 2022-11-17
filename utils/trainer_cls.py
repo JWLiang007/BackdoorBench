@@ -284,6 +284,10 @@ class ModelTrainerCLS():
 
         criterion = self.criterion.to(device)
 
+        real_all = 0
+        fake_all = 0
+        real_correct = 0
+        fake_correct = 0
         with torch.no_grad():
             for batch_idx, (x, target, *additional_info) in enumerate(tqdm(test_data)):
                 x = x.to(device)
@@ -300,7 +304,21 @@ class ModelTrainerCLS():
                 metrics['test_correct'] += correct.item()
                 metrics['test_loss'] += loss.item() * target.size(0)
                 metrics['test_total'] += target.size(0)
-
+                
+                correct_list = predicted.eq(target)
+                for i in range(len(correct_list)):
+                    if target[i] == 0:
+                        real_all += 1
+                        if correct_list[i]:
+                            real_correct += 1
+                    else:
+                        fake_all += 1
+                        if correct_list[i]:
+                            fake_correct += 1
+            if fake_all!=0:
+                print('fake correct rate: ', fake_correct / fake_all)
+            if real_all != 0:
+                print('real correct rate: ', real_correct / real_all)       
         return metrics
 
     #@resource_check

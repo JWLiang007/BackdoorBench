@@ -84,12 +84,8 @@ class SBI_Dataset(Dataset):
 
 
 
-	def _cache_img(self,idx,prefix='frames',replace=False):
-		
+	def _cache_img(self,idx):
 		filename=self.image_list[idx]
-		filename= filename.replace('frames',prefix)
-		if not (os.path.isfile(filename) and os.path.isfile(filename.replace('.png','.npy').replace('/frames/',self.path_lm)) and os.path.isfile(filename.replace('.png','.npy').replace('/frames/','/retina/'))):
-			return None
 		img=np.array(Image.open(filename))
 		landmark=np.load(filename.replace('.png','.npy').replace('/frames/',self.path_lm))[0]
 		bbox_lm=np.array([landmark[:,0].min(),landmark[:,1].min(),landmark[:,0].max(),landmark[:,1].max()])
@@ -122,9 +118,7 @@ class SBI_Dataset(Dataset):
 		# 	print('skip ', filename)
 		# 	return 
 		cache_item = {'img':img, 'landmark':landmark, 'bbox':bbox, 'coord':(y0_new,y1_new,x0_new,x1_new)}
-		if replace:
-			self.cache_list[idx] = cache_item
-		return cache_item
+		
 		# above cache intermediate results
 
 		# img_r,img_f,mask_f=self.self_blending(img.copy(),landmark.copy())
@@ -145,7 +139,7 @@ class SBI_Dataset(Dataset):
 		# cache_item['landmark_cropped'] = landmark_cropped
 		# cache_item['img_r'] = img_r
 		# self.mp_cache_list.append(cache_item)
-		# self.cache_list.append(cache_item)
+		self.cache_list.append(cache_item)
 		# self.inter_cache_list.append(cache_item)
 		# self.final_cache_list.append(img_r)
 		# self.mp_inter_cache_list.append(cache_item)
@@ -160,9 +154,7 @@ class SBI_Dataset(Dataset):
 		# pool = multiprocessing.Pool(pool_size)
 		# param = []
 		for idx,filename in enumerate(tqdm(self.image_list)):
-			cache_item = self._cache_img(idx)
-			if cache_item is not None :
-				self.cache_list.append(cache_item)
+			self._cache_img(idx)
 		# 	filename=self.image_list[idx]
 		# 	param.append(idx)
 		# 	if idx % pool_size == (pool_size-1):
@@ -182,7 +174,7 @@ class SBI_Dataset(Dataset):
 	
 	def __getitem__(self,idx):
 		return self.cache_list[idx]['img'], 0, \
-			{'landmark':self.cache_list[idx]['landmark'], 'coord': self.cache_list[idx]['coord'],'dataset':self}
+			{'landmark':self.cache_list[idx]['landmark'], 'coord': self.cache_list[idx]['coord']}
 		# return Image.fromarray(self.cache_list[idx]['img_r']), 0, self.cache_list[idx]['landmark_cropped']
 
 	def get_items(self,idx,args=None,poisoned=None):
@@ -203,6 +195,8 @@ class SBI_Dataset(Dataset):
         # ])
 		while True:
 			img = self.cache_list[idx]['img']
+			if 'origin_img' in self.cache_list[idx].keys():
+				ori_img = self.cache_list[idx]['origin_img']
 			landmark = self.cache_list[idx]['landmark']
 			bbox = self.cache_list[idx]['bbox'] 
 		# if poisoned:
@@ -235,6 +229,8 @@ class SBI_Dataset(Dataset):
 		# img_r=img_r[y0_new:y1_new,x0_new:x1_new]
 		
 			img_r,img_f = self.gen_real_and_fake(img,bbox,landmark)
+			if 'origin_img' in self.cache_list[idx].keys():
+				_,img_f = self.gen_real_and_fake(ori_img,bbox,landmark)
 			if img_r.shape[0] * img_r.shape[1] == 0:
 				print('error when blending: ', self.image_list[idx])
 				idx=torch.randint(low=0,high=len(self),size=(1,)).item()

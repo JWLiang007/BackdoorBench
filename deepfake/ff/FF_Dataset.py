@@ -73,8 +73,12 @@ class FF_Dataset(Dataset):
 			self.cache_imgs()
 			pickle.dump(self.cache_list,open(pkl_file,'wb'))
 
-	def _cache_img(self,idx):
+	def _cache_img(self,idx,prefix='frames',replace=False):
+		
 		filename=self.image_list[idx]
+		filename= filename.replace('frames',prefix)
+		if not (os.path.isfile(filename) and os.path.isfile(filename.replace('.png','.npy').replace('/frames/',self.path_lm)) and os.path.isfile(filename.replace('.png','.npy').replace('/frames/','/retina/'))):
+			return None
 		img=np.array(Image.open(filename))
 		landmark=np.load(filename.replace('.png','.npy').replace('/frames/',self.path_lm))[0]
 		bbox_lm=np.array([landmark[:,0].min(),landmark[:,1].min(),landmark[:,0].max(),landmark[:,1].max()])
@@ -96,9 +100,12 @@ class FF_Dataset(Dataset):
 		# img,landmark,bbox,___,y0_new,y1_new,x0_new,x1_new=crop_face(img,landmark,bbox,margin=False,crop_by_bbox=True,abs_coord=True,phase=self.phase)
 
 		cache_item = {'img':img, 'landmark':landmark, 'bbox':bbox,'label':self.label_list[idx],'coord':(y0_new,y1_new,x0_new,x1_new)}
+		if replace:
+			self.cache_list[idx] = cache_item
+		return cache_item
 		# self.mp_cache_list.append(cache_item)
 		# return cache_item
-		self.cache_list.append(cache_item)
+		# self.cache_list.append(cache_item)
 		# pass
 
 	def cache_imgs(self):
@@ -109,7 +116,9 @@ class FF_Dataset(Dataset):
 		for idx,filename in enumerate(tqdm(self.image_list)):
 			# filename=self.image_list[idx]
 			# param.append(idx)
-			self._cache_img(idx=idx)
+			cache_item = self._cache_img(idx=idx)
+			if cache_item is not None :
+				self.cache_list.append(cache_item)
 			# if idx % pool_size == (pool_size-1):
 				# pool.map(self._cache_img,param)
 				# self.cache_list+=res
@@ -127,7 +136,7 @@ class FF_Dataset(Dataset):
 
 	def __getitem__(self,idx):
 		return self.cache_list[idx]['img'], self.cache_list[idx]['label'],\
-      		{'landmark':self.cache_list[idx]['landmark'], 'coord': self.cache_list[idx]['coord']}
+      		{'landmark':self.cache_list[idx]['landmark'], 'coord': self.cache_list[idx]['coord'],'dataset':self}
 		
 	def get_items(self,idx):
 		img = self.cache_list[idx]['img']

@@ -112,11 +112,11 @@ def main():
         save_path = generate_save_folder(
             run_info=('afterwards' if 'load_path' in args.__dict__ else 'attack') + '_' + args.attack,
             given_load_file_path=args.load_path if 'load_path' in args else None,
-            all_record_folder_path='../record',
+            all_record_folder_path='../record/blended/',
         )
     else:
-        save_path = '../record/' + args.save_folder_name
-        os.mkdir(save_path)
+        save_path = '../record/blended/' + args.save_folder_name
+        os.makedirs(save_path,exist_ok=True)
 
     args.save_path = save_path
 

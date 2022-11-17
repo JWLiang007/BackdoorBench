@@ -9,8 +9,8 @@ import os
 import pandas as pd
 
 
-def init_ff(phase,level='frame',n_frames=8,comp='c23'):
-	dataset_path='../data/FaceForensics++/original_sequences/youtube/{}/frames/'.format(comp)
+def init_ff(phase,level='frame',n_frames=8,comp='c23',prefix=""):
+	dataset_path=f'../data/FaceForensics++/original_sequences/youtube/{comp}/{prefix}/frames/'
 	
 
 	image_list=[]

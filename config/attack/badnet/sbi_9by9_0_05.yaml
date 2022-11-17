@@ -5,7 +5,7 @@ attack_target: 0
 client_optimizer: sam
 dataset: sbi
 dataset_path: ../data
-frequency_save: 10
+frequency_save: 1
 batch_size: 16
 lr: 0.001
 lr_scheduler: LinearDecayLR
@@ -46,7 +46,7 @@ attack: fix_patch_dfd
 #  - 255
 #  - 255
 recover: True
-load_path: ../record/badnet/sbi_9by9_0_05/attack_epoch_9.pt
+load_path: ../record/badnet/sbi_9by9_0_05/attack_epoch_99.pt
 patch_mask_path: ../resource/badnet/bottom_right_9by9_380by380_white.npy
 patch_size: 9
-epochs: 20
+epochs: 100

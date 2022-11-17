@@ -9,13 +9,13 @@ import os
 import pandas as pd
 import random
 
-def init_ff(phase,level='frame',n_frames=8,comp='c23'):
+def init_ff(phase,level='frame',n_frames=8,comp='c23',prefix=""):
 	dataset_path_list = []
-	real_dataset_path='../data/FaceForensics++/original_sequences/youtube/{}/frames/'.format(comp)
+	real_dataset_path='../data/FaceForensics++/original_sequences/youtube/{}/{}/frames/'.format(comp,prefix)
 	dataset_path_list.append(real_dataset_path)
 	fakes=['Deepfakes','Face2Face','FaceSwap','NeuralTextures']
 	for fake in fakes:
-		fake_dataset_path=f'../data/FaceForensics++/manipulated_sequences/{fake}/{comp}/frames/'
+		fake_dataset_path=f'../data/FaceForensics++/manipulated_sequences/{fake}/{comp}/{prefix}/frames/'
 		dataset_path_list.append(fake_dataset_path)
 
 	real_image_list=[]

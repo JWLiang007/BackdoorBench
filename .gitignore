@@ -3,4 +3,6 @@ record
 
 **/__pycache__
 nohup.out
-run.sh
+
+StegaStamp/
+run

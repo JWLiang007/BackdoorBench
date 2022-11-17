@@ -651,7 +651,7 @@ def main():
         )
     else:
         save_path = opt.base_save_folder + opt.save_folder_name
-        os.mkdir(save_path)
+        os.makedirs(save_path,exist_ok=True)
 
     opt.save_path = save_path
 

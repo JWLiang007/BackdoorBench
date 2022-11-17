@@ -6,12 +6,13 @@ import  imageio
 import numpy as np
 import torchvision.transforms as transforms
 
-from utils.bd_img_transform.blended import blendedImageAttack
+from utils.bd_img_transform.blended import blendedImageAttack,blendedImageAttackDFD
 from utils.bd_img_transform.patch import AddMaskKeyPointTrigger, AddMaskPatchTrigger, SimpleAdditiveTrigger,AddMaskPatchTriggerDFD
 from utils.bd_img_transform.sig import sigTriggerAttack
 from utils.bd_img_transform.SSBA import SSBA_attack_replace_version
 from utils.bd_label_transform.backdoor_label_transform import *
 from torchvision.transforms import Resize
+from PIL import Image
 
 class general_compose(object):
     def __init__(self, transform_list):
@@ -88,6 +89,21 @@ def bd_attack_img_trans_generate(args):
             # (transforms.Resize(args.img_size[:2]), False),
             # (np.array, False),
 
+        ])
+    if args.attack == 'blended_dfd':
+
+   
+        train_bd_transform = general_compose([
+            (blendedImageAttackDFD(
+                np.array(Image.open(args.attack_trigger_img_path)),
+            float(args.attack_train_blended_alpha)), True) # 0.1,
+        ])
+
+        test_bd_transform = general_compose([
+
+           (blendedImageAttackDFD(
+                np.array(Image.open(args.attack_trigger_img_path)),
+            float(args.attack_train_blended_alpha)), True) # 0.1,
         ])
 
     if args.attack == 'fix_patch':

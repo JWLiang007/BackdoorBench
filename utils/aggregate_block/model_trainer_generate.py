@@ -11,6 +11,7 @@ from torchvision.transforms import Resize
 
 from utils.trainer_cls import ModelTrainerCLS
 from efficientnet_pytorch import EfficientNet
+from collections import OrderedDict
 try:
     from torchvision.models.efficientnet import efficientnet_b0, efficientnet_b3,efficientnet_b4
 except:
@@ -85,6 +86,9 @@ def generate_cls_model(
         net = efficientnet_b3(num_classes= num_classes, **kwargs)
     elif model_name == 'efficientnet_b4':
         net = EfficientNet.from_pretrained("efficientnet-b4",advprop=True,num_classes=2)
+        # cnn_sd=torch.load("/home/jwl/code/SelfBlendedImages/weights/FFc23.tar")['model']
+        # cnn_sd = OrderedDict([(k.replace('net.',''), v) if  k.startswith('net.') else (k, v) for k, v in cnn_sd.items()])
+        # net.load_state_dict(cnn_sd)
     elif model_name.startswith("vit"):
         logging.info("All vit model use the default pretrain and resize to match the input shape!")
         if model_name == 'vit_b_16':

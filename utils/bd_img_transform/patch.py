@@ -74,10 +74,14 @@ class AddMaskKeyPointTrigger(object):
         return self.add_trigger(img,infos['landmark'])
 
     def add_trigger(self, img, key_points):
-        for p in key_points:
+        for p in key_points[17:68]:
+        # for p in key_points:
             if p[1] >= img.shape[0] or p[0] >= img.shape[1]:
                 continue
-            img[p[1]][p[0]] = 255
+            img[p[1]-2:p[1]+2,p[0]-2:p[0]+2] = np.clip(img[p[1]-2:p[1]+2,p[0]-2:p[0]+2].astype(np.float32)+13,0,255).astype(np.uint8)
+            # img[p[1],p[0]] = np.clip(img[p[1],p[0]].astype(np.float32) + 5* np.random.randn(), 0,255).astype(np.uint8)
+            # img[p[1],p[0]] = 255
+            # img[p[1]-1:p[1]+1,p[0]-1:p[0]+1] = 255
         return img
 
 class SimpleAdditiveTrigger(object):
